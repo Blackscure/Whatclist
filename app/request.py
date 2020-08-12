@@ -1,6 +1,8 @@
 from app import app
 import urllib.request,json
 from .models import movie
+from .requests import get_movies,get_movie,search_movie
+
 
 Movie = movie.Movie
 
@@ -74,4 +76,33 @@ def get_movies(category):
             movie_object = Movie(id,title,overview,poster,vote_average,vote_count)
 
     return movie_object
+
+    def search_movie(movie_name):
+    search_movie_url = 'https://api.themoviedb.org/3/search/movie?api_key={}&query={}'.format(api_key,movie_name)
+    with urllib.request.urlopen(search_movie_url) as url:
+        search_movie_data = url.read()
+        search_movie_response = json.loads(search_movie_data)
+
+        search_movie_results = None
+
+        if search_movie_response['results']:
+            search_movie_list = search_movie_response['results']
+            search_movie_results = process_results(search_movie_list)
+
+
+    return search_movie_results
+
+
+
+@app.route('/search/<movie_name>')
+def search(movie_name):
+    '''
+    View function to display the search results
+    '''
+    movie_name_list = movie_name.split(" ")
+    movie_name_format = "+".join(movie_name_list)
+    searched_movies = search_movie(movie_name_format)
+    title = f'search results for {movie_name}'
+    return render_template('search.html',movies = searched_movies)
+
 
